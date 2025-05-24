@@ -1,0 +1,12 @@
+machine:
+  network:
+    kubespan:
+      enabled: true
+      advertiseKubernetesNetworks: false
+      allowDownPeerBypass: false
+      mtu: 1420
+      filters:
+        endpoints:
+          - 0.0.0.0/0
+          - "!10.0.1.0/24"
+          - "!::/0"

@@ -1,0 +1,223 @@
+cluster:
+  inlineManifests:
+    - name: gateway-api-crds-install
+      contents: |
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: gateway-api-crds-install
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: gateway-api-crds-install
+          namespace: kube-system
+        ---
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: gateway-api-crds-install
+          namespace: kube-system
+        ---
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: gateway-api-crds-install
+          namespace: kube-system
+        spec:
+          backoffLimit: 10
+          template:
+            metadata:
+              labels:
+                app: gateway-api-crds-install
+            spec:
+              restartPolicy: OnFailure
+              tolerations:
+                - operator: Exists
+                - effect: NoSchedule
+                  operator: Exists
+                - effect: NoExecute
+                  operator: Exists
+                - effect: PreferNoSchedule
+                  operator: Exists
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoSchedule
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoExecute
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: PreferNoSchedule
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: node-role.kubernetes.io/control-plane
+                            operator: Exists
+              serviceAccount: gateway-api-crds-install
+              serviceAccountName: gateway-api-crds-install
+              hostNetwork: true
+              containers:
+              - name: gateway-api-crds-install
+                image: bitnami/kubectl:latest
+                env:
+                - name: KUBERNETES_SERVICE_HOST
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: status.podIP
+                - name: KUBERNETES_SERVICE_PORT
+                  value: "6443"
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    echo "Installing Gateway API CRDs..."
+                    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.3.0/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
+                    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.3.0/config/crd/standard/gateway.networking.k8s.io_gateways.yaml
+                    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.3.0/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
+                    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.3.0/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
+                    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.3.0/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
+                    kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.3.0/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
+    - name: cilium-install
+      contents: |
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: cilium-install
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: cilium-install
+          namespace: kube-system
+        ---
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: cilium-install
+          namespace: kube-system
+        ---
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: cilium-install
+          namespace: kube-system
+        spec:
+          backoffLimit: 10
+          template:
+            metadata:
+              labels:
+                app: cilium-install
+            spec:
+              restartPolicy: OnFailure
+              tolerations:
+                - operator: Exists
+                - effect: NoSchedule
+                  operator: Exists
+                - effect: NoExecute
+                  operator: Exists
+                - effect: PreferNoSchedule
+                  operator: Exists
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoSchedule
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoExecute
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: PreferNoSchedule
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: node-role.kubernetes.io/control-plane
+                            operator: Exists
+              serviceAccount: cilium-install
+              serviceAccountName: cilium-install
+              hostNetwork: true
+              containers:
+              - name: cilium-install
+                image: alpine:latest
+                env:
+                - name: KUBERNETES_SERVICE_HOST
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: status.podIP
+                - name: KUBERNETES_SERVICE_PORT
+                  value: "6443"
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    apk add --no-cache curl
+                    curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz
+                    tar xzf cilium-linux-amd64.tar.gz -C /usr/local/bin
+                    rm cilium-linux-amd64.tar.gz
+                    if cilium status --wait=false >/dev/null 2>&1; then
+                      cilium upgrade --set ipam.mode=kubernetes --set kubeProxyReplacement=true --set securityContext.capabilities.ciliumAgent={CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID} --set securityContext.capabilities.cleanCiliumState={NET_ADMIN,SYS_ADMIN,SYS_RESOURCE} --set cgroup.autoMount.enabled=false --set cgroup.hostRoot=/sys/fs/cgroup --set k8sServiceHost=localhost --set k8sServicePort=7445 --set gatewayAPI.enabled=true --set gatewayAPI.hostNetwork.enabled=false --set nodeIPAM.enabled=false --set l2announcements.enabled=true --set externalIPs.enabled=true --set devices="eth+ ens+"
+                    else
+                      cilium install --set ipam.mode=kubernetes --set kubeProxyReplacement=true --set securityContext.capabilities.ciliumAgent={CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID} --set securityContext.capabilities.cleanCiliumState={NET_ADMIN,SYS_ADMIN,SYS_RESOURCE} --set cgroup.autoMount.enabled=false --set cgroup.hostRoot=/sys/fs/cgroup --set k8sServiceHost=localhost --set k8sServicePort=7445 --set gatewayAPI.enabled=true --set gatewayAPI.hostNetwork.enabled=false --set nodeIPAM.enabled=false --set l2announcements.enabled=true --set externalIPs.enabled=true --set devices="eth+ ens+ enp+"
+                    fi
+    - name: cilium-l2-announcement
+      contents: |
+        ---
+        apiVersion: "cilium.io/v2alpha1"
+        kind: CiliumLoadBalancerIPPool
+        metadata:
+          name: external-pool
+          namespace: kube-system
+        spec:
+          blocks:
+            - stop: 10.201.0.200
+              start: 10.201.0.100
+        ---
+        apiVersion: "cilium.io/v2alpha1"
+        kind: CiliumL2AnnouncementPolicy
+        metadata:
+          name: cilium-l2-announcement-policy
+          namespace: kube-system
+        spec:
+          nodeSelector:
+            matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+          interfaces:
+            - ^eth[0-9]+
+            - ^ens[0-9]+
+          externalIPs: true
+          loadBalancerIPs: true
+    - name: cilium-gateway
+      contents: |
+        ---
+        apiVersion: gateway.networking.k8s.io/v1beta1
+        kind: Gateway
+        metadata:
+          name: cilium-gateway
+          namespace: kube-system
+        spec:
+          gatewayClassName: cilium
+          listeners:
+            - name: http
+              port: 80
+              protocol: HTTP
+              allowedRoutes:
+                namespaces:
+                  from: All
+            - name: https
+              port: 443
+              protocol: HTTPS
+              allowedRoutes:
+                namespaces:
+                  from: All

@@ -1,0 +1,33 @@
+machine:
+  install:
+    disk: /dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_incus_root
+    bootloader: true
+    wipe: true
+  network:
+    kubespan:
+      enabled: true
+    hostname: talos-worker-vm-gpu.internal
+    interfaces:
+      - interface: enp5s0
+        dhcp: false
+      - interface: enp8s0f0
+        addresses:
+          - 10.200.0.10/24
+        dhcp: false
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.200.0.1
+  disks:
+    - device: /dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_incus_disk0
+      partitions:
+        - mountpoint: /var/mnt/longhorn
+
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw

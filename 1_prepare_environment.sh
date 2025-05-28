@@ -96,6 +96,15 @@ export BASE_DIR="$BASE_DIR"
 export TERRAFORM_DIR="$TERRAFORM_DIR"
 export GENERATED_DIR="$GENERATED_DIR"
 export HCLOUD_NETWORK_ID="$HCLOUD_NETWORK_ID"
+
+# Worker node configurations (physical machines)
+export WORKER_NODES="1 2 3"
+export WORKER_1_PATCH="patches/worker-patch-1.yml"
+export WORKER_2_PATCH="patches/worker-patch-2.yml"
+export WORKER_3_PATCH="patches/worker-patch-3.yml"
+export WORKER_1_IP="10.200.0.10"
+export WORKER_2_IP="10.200.0.6"
+export WORKER_3_IP="10.200.0.7"
 EOF
 
 echo "Environment prepared and saved to $GENERATED_DIR/cluster_info.env"

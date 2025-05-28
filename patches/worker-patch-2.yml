@@ -1,0 +1,31 @@
+machine:
+  install:
+    disk: /dev/disk/by-id/ata-UDSS_UD2CS1HT100-512G_TUSMA248YX00717
+    bootloader: true
+    wipe: true
+  network:
+    kubespan:
+      enabled: true
+    hostname: talos-worker-2.internal
+    interfaces:
+      - interface: enp2s0
+        addresses:
+          - 10.200.0.6/24
+        dhcp: false
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.200.0.1
+  disks:
+    - device: /dev/disk/by-id/ata-ST2000LM015-2E8174_WDZXGBNG
+      partitions:
+        - mountpoint: /var/mnt/longhorn
+
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw

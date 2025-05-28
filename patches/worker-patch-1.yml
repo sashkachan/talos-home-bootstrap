@@ -1,0 +1,26 @@
+machine:
+  install:
+    disk: /dev/disk/by-id/nvme-512GB_SSD_CN133BH3001565
+    bootloader: true
+    wipe: true
+  network:
+    kubespan:
+      enabled: true
+    hostname: talos-worker-1.internal
+    interfaces:
+      - interface: enp2s0
+        addresses:
+          - 10.200.0.8/24
+        dhcp: false
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.200.0.1
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw

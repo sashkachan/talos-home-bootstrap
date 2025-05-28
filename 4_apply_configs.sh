@@ -90,4 +90,23 @@ talosctl config node $NODE_IPS
 echo "Final talosctl configuration:"
 talosctl config info
 
+# Apply worker configurations to specific nodes
+echo "Applying worker configurations..."
+
+# Apply worker-1 config to worker-1 node
+echo "Applying worker-1 configuration to $WORKER_1_IP..."
+if talosctl apply-config $INSECURE_OPTION --nodes $WORKER_1_IP --file generated/worker-1.yaml; then
+  echo "Successfully applied worker-1 configuration to $WORKER_1_IP"
+else
+  echo "ERROR: Failed to apply worker-1 configuration to $WORKER_1_IP"
+fi
+
+# Apply worker-2 config to worker-2 node
+echo "Applying worker-2 configuration to $WORKER_2_IP..."
+if talosctl apply-config $INSECURE_OPTION --nodes $WORKER_2_IP --file generated/worker-2.yaml; then
+  echo "Successfully applied worker-2 configuration to $WORKER_2_IP"
+else
+  echo "ERROR: Failed to apply worker-2 configuration to $WORKER_2_IP"
+fi
+
 echo "Configuration complete. You can now run 5_bootstrap_cluster.sh"

@@ -60,13 +60,38 @@ talosctl gen config \
   --additional-sans="$ADDITIONAL_SANS" \
   --config-patch-control-plane @patches/cp-patch-kube-prism.yml \
   --config-patch-control-plane @patches/cp-patch-network.yml \
-  --config-patch-worker @patches/worker-patch-2.yml \
   --config-patch @patches/cf-patch-cni.yml \
   --config-patch @patches/cf-patch-cilium.yml \
   --config-patch @patches/cf-patch-argocd.yml \
   --config-patch @patches/machine-patch-kubespan-filters.yml \
   --with-secrets="$MANIFESTS_DIR/secrets.yaml" \
   --output-dir "$GENERATED_DIR"
+
+# Generate individual worker configurations
+echo "Generating individual worker configurations..."
+
+for worker_num in $WORKER_NODES; do
+  # Get the patch file path for this worker
+  patch_var="WORKER_${worker_num}_PATCH"
+  patch_file=${!patch_var}
+  
+  if [ ! -f "$patch_file" ]; then
+    echo "ERROR: Patch file not found: $patch_file"
+    exit 1
+  fi
+  
+  echo "Generating config for worker-$worker_num using $patch_file"
+  
+  # Generate node-specific config file
+  talosctl machineconfig patch \
+    "$GENERATED_DIR/worker.yaml" \
+    --patch @"$patch_file" \
+    --output "$GENERATED_DIR/worker-$worker_num.yaml"
+    
+  echo "✓ Generated config file: $GENERATED_DIR/worker-$worker_num.yaml"
+done
+
+echo "All worker configurations generated successfully."
   
 # Note: External cloud provider is disabled
 

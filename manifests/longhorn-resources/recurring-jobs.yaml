@@ -1,0 +1,29 @@
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: c-1uj6jo
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: 0 2 * * *
+  groups: []
+  labels: {}
+  name: c-1uj6jo
+  parameters: {}
+  retain: 1
+  task: snapshot
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: c-jdi15p
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: 0 0 * * *
+  groups: []
+  labels: {}
+  name: c-jdi15p
+  parameters: {}
+  retain: 1
+  task: backup

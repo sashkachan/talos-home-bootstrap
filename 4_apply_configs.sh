@@ -110,3 +110,13 @@ else
 fi
 
 echo "Configuration complete. You can now run 5_bootstrap_cluster.sh"
+
+# Apply worker-3 config to worker-3 node
+echo "Applying worker-3 configuration to $WORKER_3_IP..."
+if talosctl apply-config $INSECURE_OPTION --nodes $WORKER_3_IP --file generated/worker-3.yaml; then
+  echo "Successfully applied worker-3 configuration to $WORKER_3_IP"
+else
+  echo "ERROR: Failed to apply worker-3 configuration to $WORKER_3_IP"
+fi
+
+echo "Configuration complete. You can now run 5_bootstrap_cluster.sh"
